@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 
 	chosen_resonance_indices.clear();
 
-	cout << "Still having problems?" << endl;
+	//cout << "Still having problems?" << endl;
 
 	return 0;
 }
