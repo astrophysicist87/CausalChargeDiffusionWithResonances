@@ -49,11 +49,30 @@ double Cal_dN_dypTdpTdphi_toy_func(
 //Start of main
 //////////////////////
 
+double g(double x, double width)
+{
+	return (sin(x)*exp(-x*width));
+}
+
 int main(int argc, char *argv[])
 {
+	/*pT_pts = vector<double>(n_pT_pts);
+	pT_wts = vector<double>(n_pT_pts);
+
+	double width = 10.0;
+	//gauss_quadrature(n_pT_pts, 5, 0.0, 0.0, 0.0, width, pT_pts, pT_wts);
+	gauss_quadrature(101, 1, 0.0, 0.0, 0.0, 5.0/width, pT_pts, pT_wts);
+
+	double integral = 0.0;
+	for (int ipt = 0; ipt < n_pT_pts; ++ipt)
+		integral += pT_wts[ipt]*g(pT_pts[ipt], width);
+
+	cout << "result = " << integral << endl;
+
+	if (1) exit(1);*/
+
 	//initializes a few things
 	set_up_misc();
-
 	gsl_set_error_handler_off();
 
 	//load resonance information
@@ -119,9 +138,11 @@ int main(int argc, char *argv[])
 	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
 	for (int ipY = 0; ipY < n_pY_pts; ipY++)
 	{
-		cout << "  --> computing spectra at pT==" << pT_pts[ipT]
-									<< ", pphi==" << pphi_pts[ipphi]
-									<< ", pY==" << Del_pY_pts[ipY] << endl;
+		cout << "  --> computing "
+				<< all_particles[chosen_resonance_indices[iRes]].name
+				<< " spectra at pT==" << pT_pts[ipT]
+				<< ", pphi==" << pphi_pts[ipphi]
+				<< ", pY==" << Del_pY_pts[ipY] << endl;
 		full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
 			= Cal_dN_dypTdpTdphi_toy_func(
 				chosen_resonance_indices[iRes],

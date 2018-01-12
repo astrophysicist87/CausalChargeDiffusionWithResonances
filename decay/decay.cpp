@@ -62,6 +62,7 @@ namespace decay
 		chosen_resonance_indices = chosen_resonance_indices_in;
 
 		target_pid = target_particle_id_in;
+		particle_monval = all_particles[target_pid].monval;
 
 		if (thermal_pions_only)
 		{
@@ -216,8 +217,11 @@ namespace decay
 			double ssum_re = M*VEC_n2_s_factor*vsum_re;
 			double ssum_im = M*VEC_n2_s_factor*vsum_im;
 
-			(*spec_re)[res_vector_indexer(daughter_idx, ipT, ipphi, ipY)] += ssum_re;
-			(*spec_im)[res_vector_indexer(daughter_idx, ipT, ipphi, ipY)] += ssum_im;
+			//cout << "CHECK: " << daughter_idx << "   " << daughter_pid << "   " << parent_pid
+			//		<< "   " << res_vector_indexer(daughter_idx, ipT, ipphi, ipY)
+			//		<< "   " << (*spec_re).size() << endl;
+			(*spec_re).at(res_vector_indexer(daughter_idx, ipT, ipphi, ipY)) += ssum_re;
+			(*spec_im).at(res_vector_indexer(daughter_idx, ipT, ipphi, ipY)) += ssum_im;
 		}											// end of pT, pphi, pY loops
 		return;
 	}
@@ -867,11 +871,11 @@ namespace decay
 
 		//check if daughter contributes to pions
 		bool daughter_does_not_contribute
-				= ( (temp_daughter.decays_Npart[0] == 1
-						|| temp_daughter.effective_branchratio < 1.e-12)
+				= ( ( temp_daughter.decays_Npart[0] == 1
+						|| temp_daughter.effective_branchratio < 1.e-12 )
 					&& temp_daughter.monval != particle_monval );
 
-		return (daughter_does_not_contribute);
+		return ( not daughter_does_not_contribute );
 	}
 
 	void Set_current_particle_info(int dc_idx)

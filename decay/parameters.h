@@ -24,9 +24,9 @@ const int Maxdecaychannel=13;
 const int Maxdecaypart=5;
 
 // Momentum information
-const int n_pT_pts = 3;
-const int n_pphi_pts = 4;
-const int n_pY_pts = 5;
+const int n_pT_pts = 15;
+const int n_pphi_pts = 36;
+const int n_pY_pts = 101;
 
 // Misc.
 const double resonanceThreshold = 0.0;
