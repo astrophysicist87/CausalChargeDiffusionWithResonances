@@ -23,7 +23,7 @@ COMMAND=run_test
 OBJS= $(addsuffix .o, $(basename $(SRCS)))
 
 CC= g++
-CFLAGS=  -pg -g -O3
+CFLAGS= -pg -g -O3 -fopenmp
 
 WARNFLAGS=
 LDFLAGS= -lgsl -lgslcblas
@@ -34,9 +34,6 @@ LIBS= -L/sw/lib -I/sw/include
 
 $(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
 	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(CFLAGS) $(LIBS)
-
-#main.o : main.cpp defs.h
-#	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c main.cpp -o main.o
 
 clean:
 	rm -f $(OBJS)

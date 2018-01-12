@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -133,21 +134,37 @@ int main(int argc, char *argv[])
 
 	//set thermal spectra for all needed resonances
 	cout << "Starting thermal calculations..." << endl;
+	#pragma omp parallel for
 	for (int iRes = 0; iRes < n_resonances; iRes++)
-	for (int ipT = 0; ipT < n_pT_pts; ipT++)
-	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
-	for (int ipY = 0; ipY < n_pY_pts; ipY++)
 	{
-		cout << "  --> computing "
+		printf("Hello World (call #%d) from thread = %d, nthreads = %d\n",
+				iRes, omp_get_thread_num(), omp_get_num_threads());
+		/*cout << "Thread = " << omp_get_thread_num()
+				<< " of " << omp_get_num_threads() << " currently devoted to "
 				<< all_particles[chosen_resonance_indices[iRes]].name
-				<< " spectra at pT==" << pT_pts[ipT]
-				<< ", pphi==" << pphi_pts[ipphi]
-				<< ", pY==" << Del_pY_pts[ipY] << endl;
-		full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
-			= Cal_dN_dypTdpTdphi_toy_func(
-				chosen_resonance_indices[iRes],
-				&all_particles,
-				pT_pts[ipT], pphi_pts[ipphi], Del_pY_pts[ipY] );
+				<< " spectra:\n";
+		cout << " * working on "
+				<< all_particles[chosen_resonance_indices[iRes]].name
+				<< " spectra..." << endl;*/
+		//loop over momenta
+		for (int ipT = 0; ipT < n_pT_pts; ipT++)
+		for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
+		for (int ipY = 0; ipY < n_pY_pts; ipY++)
+		{
+			//cout << "  --> computing "
+			//		<< all_particles[chosen_resonance_indices[iRes]].name
+			//		<< " spectra at pT==" << pT_pts[ipT]
+			//		<< ", pphi==" << pphi_pts[ipphi]
+			//		<< ", pY==" << Del_pY_pts[ipY] << endl;
+			full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+				= Cal_dN_dypTdpTdphi_toy_func(
+					chosen_resonance_indices[iRes],
+					&all_particles,
+					pT_pts[ipT], pphi_pts[ipphi], Del_pY_pts[ipY] );
+		}
+		//cout << "Finished working on "
+		//		<< all_particles[chosen_resonance_indices[iRes]].name
+		//		<< " spectra!" << endl;
 	}
 	cout << "Finished thermal calculations!" << endl;
 
