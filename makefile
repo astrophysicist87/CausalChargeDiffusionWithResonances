@@ -36,7 +36,7 @@ $(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE)
 	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(CFLAGS) $(LIBS)
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) $(COMMAND)
  
 tarz:
 	tar zcf - $(MAKEFILE) $(SRCS) $(HDRS) > $(COMMAND).tar.gz

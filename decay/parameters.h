@@ -25,8 +25,8 @@ const int Maxdecaypart=5;
 
 // Momentum information
 const int n_pT_pts = 15;
-const int n_pphi_pts = 36;
-const int n_pY_pts = 101;
+const int n_pphi_pts = 12;
+const int n_pY_pts = 15;
 
 // Misc.
 const double resonanceThreshold = 0.0;

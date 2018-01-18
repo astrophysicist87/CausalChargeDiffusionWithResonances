@@ -20,6 +20,15 @@ using namespace std;
 #include "decay/decay.h"
 #include "defs.h"
 
+
+//space-time integration grid
+const int n_tau_pts = 51;
+const int n_r_pts = 101;
+const int n_phi_pts = 51;
+double * tau_pts, * tau_wts;
+double * x_pts, * x_wts;
+double * phi_pts, * phi_wts;
+
 vector<double> xi_pts, xi_wts;
 vector<double> k_pts, k_wts;
 
@@ -132,6 +141,17 @@ int main(int argc, char *argv[])
 	//	cout << iRes << "   " << chosen_resonance_indices[iRes] << endl;
 	//if (1) exit (1);
 
+	tau_pts = new double [n_tau_pts];
+	tau_wts = new double [n_tau_pts];
+	x_pts = new double [n_r_pts];
+	x_wts = new double [n_r_pts];
+	phi_pts = new double [n_phi_pts];
+	phi_wts = new double [n_phi_pts];
+	gauss_quadrature(n_tau_pts, 1, 0.0, 0.0, 0.0, 10.0, tau_pts, tau_wts);
+	gauss_quadrature(n_r_pts, 1, 0.0, 0.0, -1.0, 1.0, x_pts, x_wts);
+	gauss_quadrature(n_phi_pts, 1, 0.0, 0.0, 0.0, 2.0*M_PI, phi_pts, phi_wts);
+
+
 	//set thermal spectra for all needed resonances
 	cout << "Starting thermal calculations..." << endl;
 	#pragma omp parallel for
@@ -151,20 +171,20 @@ int main(int argc, char *argv[])
 		for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
 		for (int ipY = 0; ipY < n_pY_pts; ipY++)
 		{
-			//cout << "  --> computing "
-			//		<< all_particles[chosen_resonance_indices[iRes]].name
-			//		<< " spectra at pT==" << pT_pts[ipT]
-			//		<< ", pphi==" << pphi_pts[ipphi]
-			//		<< ", pY==" << Del_pY_pts[ipY] << endl;
+			/*cout << "  --> computing "
+					<< all_particles[chosen_resonance_indices[iRes]].name
+					<< " spectra at pT==" << pT_pts[ipT]
+					<< ", pphi==" << pphi_pts[ipphi]
+					<< ", pY==" << Del_pY_pts[ipY] << endl;*/
 			full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
 				= Cal_dN_dypTdpTdphi_toy_func(
 					chosen_resonance_indices[iRes],
 					&all_particles,
 					pT_pts[ipT], pphi_pts[ipphi], Del_pY_pts[ipY] );
 		}
-		//cout << "Finished working on "
-		//		<< all_particles[chosen_resonance_indices[iRes]].name
-		//		<< " spectra!" << endl;
+		/*cout << "Finished working on "
+				<< all_particles[chosen_resonance_indices[iRes]].name
+				<< " spectra!" << endl;*/
 	}
 	cout << "Finished thermal calculations!" << endl;
 
@@ -191,6 +211,14 @@ int main(int argc, char *argv[])
 	chosen_resonance_indices.clear();
 
 	//cout << "Still having problems?" << endl;
+
+	//clean up
+	delete [] tau_pts;
+	delete [] tau_wts;
+	delete [] x_pts;
+	delete [] x_wts;
+	delete [] phi_pts;
+	delete [] phi_wts;
 
 	return 0;
 }
@@ -324,20 +352,6 @@ double Cal_dN_dypTdpTdphi_toy_func(
 {
 	const double hbarC = 0.197327053;
 
-	//space-time integration grid
-	const int n_tau_pts = 51;
-	const int n_r_pts = 101;
-	const int n_phi_pts = 51;
-	double * tau_pts = new double [n_tau_pts];
-	double * tau_wts = new double [n_tau_pts];
-	double * x_pts = new double [n_r_pts];
-	double * x_wts = new double [n_r_pts];
-	double * phi_pts = new double [n_phi_pts];
-	double * phi_wts = new double [n_phi_pts];
-	gauss_quadrature(n_tau_pts, 1, 0.0, 0.0, 0.0, 10.0, tau_pts, tau_wts);
-	gauss_quadrature(n_r_pts, 1, 0.0, 0.0, -1.0, 1.0, x_pts, x_wts);
-	gauss_quadrature(n_phi_pts, 1, 0.0, 0.0, 0.0, 2.0*M_PI, phi_pts, phi_wts);
-
 	// set particle information
 	double degen = (*all_particles)[local_pid].gspin;
 	double localmass = (*all_particles)[local_pid].mass;
@@ -387,14 +401,6 @@ double Cal_dN_dypTdpTdphi_toy_func(
 			result += S_p_with_weight * I1;
 		}
 	}
-
-	//clean up
-	delete [] tau_pts;
-	delete [] tau_wts;
-	delete [] x_pts;
-	delete [] x_wts;
-	delete [] phi_pts;
-	delete [] phi_wts;
 
 	return (result);
 }
