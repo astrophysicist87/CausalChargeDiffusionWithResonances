@@ -15,7 +15,8 @@ decay/decay.h \
 decay/readindata.h \
 decay/parameters.h \
 asymptotics.h \
-thermal.h
+thermal.h \
+chebyshev.h
 
 MAKEFILE=makefile
 

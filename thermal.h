@@ -18,17 +18,16 @@ using namespace std;
 extern vector<double> pT_pts, pT_wts;
 extern vector<double> pphi_pts, pphi_wts;
 extern vector<double> Del_pY_pts, Del_pY_wts;
-extern double * tau_pts, * tau_wts;
+//extern double * tau_pts, * tau_wts;
 extern double * x_pts, * x_wts;
-extern double * phi_pts, * phi_wts;
+//extern double * phi_pts, * phi_wts;
 
-extern const int n_tau_pts;
+//extern const int n_tau_pts;
 extern const int n_r_pts;
-extern const int n_phi_pts;
+//extern const int n_phi_pts;
 extern const double TFO;
 
 //define some parameters for the exact emission function
-
 const double Rad = 5.0, Del_tau = 1.0, tau0 = 5.0, etaf = 0.6;
 
 inline double Hfactor(double r, double tau)
@@ -45,12 +44,10 @@ inline double Hfactor(double r)
 			);
 }
 
-
 inline double eta_t(double r)
 {
 	return ( etaf*r/Rad );
 }
-
 
 double Cal_dN_dypTdpTdphi_toy_func(
 		int local_pid, vector<readindata::particle_info> * all_particles,
@@ -63,8 +60,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 	double localmass = (*all_particles)[local_pid].mass;
 
 	// set some freeze-out surface information that's constant the whole time
-	double prefactor = 1.0*degen/sqrt(8.0*M_PI*M_PI*M_PI)/M_PI/hbarC;
-	double Tdec = TFO;
+	double prefactor = degen/sqrt(8.0*M_PI*M_PI*M_PI)/M_PI/hbarC;
+	double Tdec = TFO;	//back to MeV
 	double one_by_Tdec = 1./Tdec;
 
 	double ch_pY = cosh(pY_loc);
@@ -78,7 +75,7 @@ double Cal_dN_dypTdpTdphi_toy_func(
 
 		//set r-point inside pT loop, since optimal distribution of integration points
 		// depends on value of MT
-		double rmin = 0.0, rmax = 15.0 * Rad / sqrt(1.0 + mT*one_by_Tdec*etaf*etaf);
+		double rmin = 0.0, rmax = 25.0 * Rad / sqrt(1.0 + mT*one_by_Tdec*etaf*etaf);
 		double hw = 0.5 * (rmax - rmin), cen = 0.5 * (rmax + rmin);
 		double rpt = cen + hw * x_pts[ir];
 
@@ -88,6 +85,9 @@ double Cal_dN_dypTdpTdphi_toy_func(
 
 		double alpha = mT * one_by_Tdec * ch_eta_t;
 		double beta = one_by_Tdec * pT_loc * sh_eta_t;
+		if (alpha > 700.0)
+			continue;
+
 		double K1 = 2.0 * gsl_sf_bessel_K1(alpha);
 		double I0 = gsl_sf_bessel_I0(beta);
 

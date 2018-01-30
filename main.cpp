@@ -20,11 +20,12 @@ using namespace std;
 #include "decay/decay.h"
 #include "defs.h"
 #include "thermal.h"
+#include "chebyshev.h"
 
 
 //space-time integration grid
 const int n_tau_pts = 51;
-const int n_r_pts = 101;
+const int n_r_pts = 51;
 const int n_phi_pts = 51;
 double * tau_pts, * tau_wts;
 double * x_pts, * x_wts;
@@ -34,7 +35,7 @@ vector<double> xi_pts, xi_wts;
 vector<double> k_pts, k_wts;
 
 int n_resonances = -1;
-const double AT = 1.0, tauFINAL = 10.0, TFO = 150.0 / 197.33;
+const double AT = 1.0, tauFINAL = 10.0, TFO = 0.15444512;	//GeV
 const double chiQ = 2.0/3.0;
 
 vector<complex<double> > scriptFn_vector;
@@ -43,6 +44,7 @@ vector<double> full_resonance_spectra_re, full_resonance_spectra_im;
 vector<double> pT_pts, pT_wts;
 vector<double> pphi_pts, pphi_wts;
 vector<double> Del_pY_pts, Del_pY_wts;
+vector<double> tmp_Del_pY_pts, tmp_Del_pY_wts;	//use these and Chebyshev to construct actual Del_pY points...
 
 //function prototypes
 void set_up_misc();
@@ -84,7 +86,7 @@ int main(int argc, char *argv[])
 
 	//initializes a few things
 	set_up_misc();
-	gsl_set_error_handler_off();
+	//gsl_set_error_handler_off();
 
 	//load resonance information
 	const int particle_idx = 1;		// pi^+
@@ -135,8 +137,8 @@ int main(int argc, char *argv[])
 	//	cout << scriptFn_vector[i] << endl;
 	*/
 
-	vector<double> full_resonance_spectra_re (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
-	vector<double> full_resonance_spectra_im (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
+	vector<double> tmp_full_resonance_spectra_re (n_resonances*n_pT_pts*n_pphi_pts*tmp_n_pY_pts);
+	vector<double> tmp_full_resonance_spectra_im (n_resonances*n_pT_pts*n_pphi_pts*tmp_n_pY_pts);
 
 	//for (int iRes = 0; iRes < n_resonances; iRes++)
 	//	cout << iRes << "   " << chosen_resonance_indices[iRes] << endl;
@@ -167,27 +169,80 @@ int main(int argc, char *argv[])
 		cout << " * working on "
 				<< all_particles[chosen_resonance_indices[iRes]].name
 				<< " spectra..." << endl;
+
+//if (chosen_resonance_indices[iRes]==1)
+//	continue;
+
 		//loop over momenta
 		for (int ipT = 0; ipT < n_pT_pts; ipT++)
 		for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
-		for (int ipY = 0; ipY < n_pY_pts; ipY++)
+		for (int ipY = 0; ipY < tmp_n_pY_pts; ipY++)
 		{
-			cout << "  --> computing "
+			/*cout << "  --> computing "
 					<< all_particles[chosen_resonance_indices[iRes]].name
 					<< " spectra at pT==" << pT_pts[ipT]
 					<< ", pphi==" << pphi_pts[ipphi]
-					<< ", pY==" << Del_pY_pts[ipY] << endl;
-			full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+					<< ", pY==" << Del_pY_pts[ipY] << endl;*/
+			tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
 				= Cal_dN_dypTdpTdphi_toy_func(
 					chosen_resonance_indices[iRes],
 					&all_particles,
-					pT_pts[ipT], pphi_pts[ipphi], Del_pY_pts[ipY] );
+					pT_pts[ipT], pphi_pts[ipphi], tmp_Del_pY_pts[ipY] );
 		}
 		cout << "Finished working on "
 				<< all_particles[chosen_resonance_indices[iRes]].name
 				<< " spectra!" << endl;
 	}
 	cout << "Finished thermal calculations!" << endl;
+
+/*
+	//print out results
+	//cout << setprecision(20) << setw(25);
+	for (int iRes = 0; iRes < n_resonances; iRes++)
+	for (int ipT = 0; ipT < n_pT_pts; ipT++)
+	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
+	for (int ipY = 0; ipY < n_pY_pts; ipY++)
+		cout << all_particles.at(chosen_resonance_indices.at(iRes)).name << ":   "
+				<< pT_pts.at(ipT) << "   " << pphi_pts.at(ipphi) << "   " << Del_pY_pts.at(ipY) << "   "
+				<< full_resonance_spectra_re.at(res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)) << endl;
+*/
+
+//if (1) exit (8);
+
+	vector<double> full_resonance_spectra_re (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
+	//vector<double> full_resonance_spectra_im (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
+
+	vector<double> real(tmp_n_pY_pts);
+	//vector<double> imag(tmp_n_pY_pts);
+	vector<double> interp_real(n_pY_pts);
+	//vector<double> interp_imag(n_pY_pts);
+
+	for (int iRes = 0; iRes < n_resonances; iRes++)
+	for (int ipT = 0; ipT < n_pT_pts; ipT++)
+	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
+	{
+		for (int ipY = 0; ipY < tmp_n_pY_pts; ++ipY)
+		{
+			real[ipY] = tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
+			//imag[ipY] = tmp_full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
+		}
+
+		interp_real.clear();
+		//interp_imag.clear();
+
+		chebyshev_interpolate(&tmp_Del_pY_pts, &real, &Del_pY_pts, &interp_real);
+		//chebyshev_interpolate(&tmp_Del_pY_pts, &imag, &Del_pY_pts, &interp_imag);
+
+		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
+		{
+			full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+				 = interp_real[ipY];
+			//full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+			//	 = interp_imag[ipY];
+		}
+	}
+
+//if (1) exit (8);
 
 	//do the resonance feeddown and update spectra appropriately
 	cout << "Starting resonance feeddown..." << endl;
@@ -199,6 +254,8 @@ int main(int argc, char *argv[])
 			particle_idx );
 	cout << "Finished resonance feeddown!" << endl <<
 			"!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl << endl;
+
+//if (1) exit (8);
 
 	//print out results
 	for (int iRes = 0; iRes < n_resonances; iRes++)
@@ -254,9 +311,10 @@ void set_up_misc()
 	pphi_wts = vector<double>(n_pphi_pts);
 	gauss_quadrature(n_pphi_pts, 1, 0.0, 0.0, pphi_min, pphi_max, pphi_pts, pphi_wts);
 
+	tmp_Del_pY_pts = vector<double>(tmp_n_pY_pts);
+	tmp_Del_pY_wts = vector<double>(tmp_n_pY_pts);
 	Del_pY_pts = vector<double>(n_pY_pts);
-	//Del_pY_wts = vector<double>(n_pY_pts);
-	//gauss_quadrature(n_pY_pts, 1, 0.0, 0.0, Del_pY_min, Del_pY_max, Del_pY_pts, Del_pY_wts);
+	gauss_quadrature(n_pY_pts, 1, 0.0, 0.0, Del_pY_min, Del_pY_max, Del_pY_pts, Del_pY_wts);
 	linspace(Del_pY_pts, Del_pY_min, Del_pY_max);
 }
 
@@ -316,7 +374,7 @@ vector<double> * copy_spectra(vector<double> * spectra, int ik)
 		= spectra->begin() + res_vector_indexer( ik, 0, 0, 0, 0 );
 	vector<double>::const_iterator last
 		= spectra->begin() + res_vector_indexer( ik, n_resonances,
-													n_pT_pts, n_pphi_pts, n_pY_pts );
+													n_pT_pts, n_pphi_pts, tmp_n_pY_pts );
 	static vector<double> reso_spectra(first, last);
 
 	return ( & reso_spectra );

@@ -10,13 +10,14 @@
 #include <complex>
 #include <cmath>
 
-#define VERBOSE		2
+#define VERBOSE				2
+#define USE_CHEBYSHEV		1
 
 using namespace std;
 
-const int n_s_pts = 12;
-const int n_v_pts = 12;
-const int n_zeta_pts = 12;
+const int n_s_pts = 21;
+const int n_v_pts = 21;
+const int n_zeta_pts = 21;
 
 // Particle information
 const int Maxparticle=400;
@@ -25,8 +26,9 @@ const int Maxdecaypart=5;
 
 // Momentum information
 const int n_pT_pts = 15;
-const int n_pphi_pts = 12;
-const int n_pY_pts = 15;
+const int n_pphi_pts = 36;
+const int tmp_n_pY_pts = 21;
+const int n_pY_pts = 1001;
 
 // Misc.
 const double resonanceThreshold = 0.0;
