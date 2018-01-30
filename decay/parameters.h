@@ -28,7 +28,7 @@ const int Maxdecaypart=5;
 const int n_pT_pts = 15;
 const int n_pphi_pts = 36;
 const int tmp_n_pY_pts = 21;
-const int n_pY_pts = 1001;
+const int n_pY_pts = 101;
 
 // Misc.
 const double resonanceThreshold = 0.0;

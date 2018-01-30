@@ -225,24 +225,23 @@ int main(int argc, char *argv[])
 		{
 			real[ipY] = tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
 			//imag[ipY] = tmp_full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
+			cout << "old: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << real[ipY] << endl;
 		}
 
-		interp_real.clear();
-		//interp_imag.clear();
-
-		chebyshev_interpolate(&tmp_Del_pY_pts, &real, &Del_pY_pts, &interp_real);
-		//chebyshev_interpolate(&tmp_Del_pY_pts, &imag, &Del_pY_pts, &interp_imag);
+		cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, &real, &Del_pY_pts, &interp_real);
+		//cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, &imag, &Del_pY_pts, &interp_imag);
 
 		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
 		{
-			full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+			full_resonance_spectra_re[( ( iRes * n_pT_pts + ipT ) * n_pphi_pts + ipphi ) * n_pY_pts + ipY]
 				 = interp_real[ipY];
 			//full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
 			//	 = interp_imag[ipY];
+			cout << "new: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << interp_real[ipY] << endl;			
 		}
-	}
 
-//if (1) exit (8);
+if (1) exit (8);
+	}
 
 	//do the resonance feeddown and update spectra appropriately
 	cout << "Starting resonance feeddown..." << endl;
@@ -314,7 +313,7 @@ void set_up_misc()
 	tmp_Del_pY_pts = vector<double>(tmp_n_pY_pts);
 	tmp_Del_pY_wts = vector<double>(tmp_n_pY_pts);
 	Del_pY_pts = vector<double>(n_pY_pts);
-	gauss_quadrature(n_pY_pts, 1, 0.0, 0.0, Del_pY_min, Del_pY_max, Del_pY_pts, Del_pY_wts);
+	gauss_quadrature(tmp_n_pY_pts, 1, 0.0, 0.0, Del_pY_min, Del_pY_max, tmp_Del_pY_pts, tmp_Del_pY_wts);
 	linspace(Del_pY_pts, Del_pY_min, Del_pY_max);
 }
 
