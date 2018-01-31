@@ -24,12 +24,8 @@ using namespace std;
 
 
 //space-time integration grid
-const int n_tau_pts = 51;
 const int n_r_pts = 51;
-const int n_phi_pts = 51;
-double * tau_pts, * tau_wts;
 double * x_pts, * x_wts;
-double * phi_pts, * phi_wts;
 
 vector<double> xi_pts, xi_wts;
 vector<double> k_pts, k_wts;
@@ -41,6 +37,9 @@ const double chiQ = 2.0/3.0;
 vector<complex<double> > scriptFn_vector;
 vector<double> thermal_resonance_spectra_re, thermal_resonance_spectra_im;
 vector<double> full_resonance_spectra_re, full_resonance_spectra_im;
+vector<double> tmp_full_resonance_spectra_re;
+vector<double> tmp_full_resonance_spectra_im;
+
 vector<double> pT_pts, pT_wts;
 vector<double> pphi_pts, pphi_wts;
 vector<double> Del_pY_pts, Del_pY_wts;
@@ -56,6 +55,9 @@ vector<double> * copy_spectra(vector<double> * spectra, int ik);
 double Cal_dN_dypTdpTdphi_toy_func(
 		int local_pid, vector<readindata::particle_info> * all_particles,
 		double pT_loc, double pphi_loc, double pY_loc );
+void set_thermal_spectra( vector<readindata::particle_info> all_particles,
+							vector<int> chosen_resonance_indices );
+void do_chebyshev_interpolation(vector<double> * old_vals, vector<double> * new_vals);
 
 ///////////////////////////////////////////////////////////////
 //////////////////////
@@ -137,63 +139,17 @@ int main(int argc, char *argv[])
 	//	cout << scriptFn_vector[i] << endl;
 	*/
 
-	vector<double> tmp_full_resonance_spectra_re (n_resonances*n_pT_pts*n_pphi_pts*tmp_n_pY_pts);
-	vector<double> tmp_full_resonance_spectra_im (n_resonances*n_pT_pts*n_pphi_pts*tmp_n_pY_pts);
+	tmp_full_resonance_spectra_re.resize(n_resonances*n_pT_pts*n_pphi_pts*tmp_n_pY_pts);
+	tmp_full_resonance_spectra_im.resize(n_resonances*n_pT_pts*n_pphi_pts*tmp_n_pY_pts);
 
 	//for (int iRes = 0; iRes < n_resonances; iRes++)
 	//	cout << iRes << "   " << chosen_resonance_indices[iRes] << endl;
 	//if (1) exit (1);
 
-	tau_pts = new double [n_tau_pts];
-	tau_wts = new double [n_tau_pts];
-	x_pts = new double [n_r_pts];
-	x_wts = new double [n_r_pts];
-	phi_pts = new double [n_phi_pts];
-	phi_wts = new double [n_phi_pts];
-	gauss_quadrature(n_tau_pts, 1, 0.0, 0.0, 0.0, 10.0, tau_pts, tau_wts);
-	gauss_quadrature(n_r_pts, 1, 0.0, 0.0, -1.0, 1.0, x_pts, x_wts);
-	gauss_quadrature(n_phi_pts, 1, 0.0, 0.0, 0.0, 2.0*M_PI, phi_pts, phi_wts);
 
 
-	//set thermal spectra for all needed resonances
-	cout << "Starting thermal calculations..." << endl;
-	#pragma omp parallel for
-	for (int iRes = 0; iRes < n_resonances; iRes++)
-	{
-		printf("Hello World (call #%d) from thread = %d, nthreads = %d\n",
-				iRes, omp_get_thread_num(), omp_get_num_threads());
-		cout << "Thread = " << omp_get_thread_num()
-				<< " of " << omp_get_num_threads() << " currently devoted to "
-				<< all_particles[chosen_resonance_indices[iRes]].name
-				<< " spectra:\n";
-		cout << " * working on "
-				<< all_particles[chosen_resonance_indices[iRes]].name
-				<< " spectra..." << endl;
-
-//if (chosen_resonance_indices[iRes]==1)
-//	continue;
-
-		//loop over momenta
-		for (int ipT = 0; ipT < n_pT_pts; ipT++)
-		for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
-		for (int ipY = 0; ipY < tmp_n_pY_pts; ipY++)
-		{
-			/*cout << "  --> computing "
-					<< all_particles[chosen_resonance_indices[iRes]].name
-					<< " spectra at pT==" << pT_pts[ipT]
-					<< ", pphi==" << pphi_pts[ipphi]
-					<< ", pY==" << Del_pY_pts[ipY] << endl;*/
-			tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
-				= Cal_dN_dypTdpTdphi_toy_func(
-					chosen_resonance_indices[iRes],
-					&all_particles,
-					pT_pts[ipT], pphi_pts[ipphi], tmp_Del_pY_pts[ipY] );
-		}
-		cout << "Finished working on "
-				<< all_particles[chosen_resonance_indices[iRes]].name
-				<< " spectra!" << endl;
-	}
-	cout << "Finished thermal calculations!" << endl;
+	//one of the main functions
+	set_thermal_spectra(all_particles, chosen_resonance_indices);
 
 /*
 	//print out results
@@ -209,7 +165,7 @@ int main(int argc, char *argv[])
 
 //if (1) exit (8);
 
-	vector<double> full_resonance_spectra_re (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
+	full_resonance_spectra_re.resize(n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
 	//vector<double> full_resonance_spectra_im (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
 
 	vector<double> real(tmp_n_pY_pts);
@@ -217,32 +173,17 @@ int main(int argc, char *argv[])
 	vector<double> interp_real(n_pY_pts);
 	//vector<double> interp_imag(n_pY_pts);
 
-	for (int iRes = 0; iRes < n_resonances; iRes++)
-	for (int ipT = 0; ipT < n_pT_pts; ipT++)
-	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
-	{
-		for (int ipY = 0; ipY < tmp_n_pY_pts; ++ipY)
-		{
-			real[ipY] = tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
-			//imag[ipY] = tmp_full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
-			cout << "old: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << real[ipY] << endl;
-		}
 
-		cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, &real, &Del_pY_pts, &interp_real);
-		//cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, &imag, &Del_pY_pts, &interp_imag);
 
-		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
-		{
-			full_resonance_spectra_re[( ( iRes * n_pT_pts + ipT ) * n_pphi_pts + ipphi ) * n_pY_pts + ipY]
-				 = interp_real[ipY];
-			//full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
-			//	 = interp_imag[ipY];
-			cout << "new: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << interp_real[ipY] << endl;			
-		}
 
-if (1) exit (8);
-	}
 
+	//one of the main functions
+	do_chebyshev_interpolation(&real, &interp_real);
+
+
+
+
+	//one of the main functions
 	//do the resonance feeddown and update spectra appropriately
 	cout << "Starting resonance feeddown..." << endl;
 	decay::Compute_phase_space_integrals(
@@ -267,15 +208,9 @@ if (1) exit (8);
 
 	chosen_resonance_indices.clear();
 
-	//cout << "Still having problems?" << endl;
-
 	//clean up
-	delete [] tau_pts;
-	delete [] tau_wts;
 	delete [] x_pts;
 	delete [] x_wts;
-	delete [] phi_pts;
-	delete [] phi_wts;
 
 	return 0;
 }
@@ -300,6 +235,10 @@ void set_up_misc()
 	k_pts = vector<double>(n_k_pts);
 	k_wts = vector<double>(n_k_pts);
 	gauss_quadrature(n_k_pts, 1, 0.0, 0.0, k_min, k_max, k_pts, k_wts);
+
+	x_pts = new double [n_r_pts];
+	x_wts = new double [n_r_pts];
+	gauss_quadrature(n_r_pts, 1, 0.0, 0.0, -1.0, 1.0, x_pts, x_wts);
 
 	pT_pts = vector<double>(n_pT_pts);
 	pT_wts = vector<double>(n_pT_pts);
@@ -380,16 +319,86 @@ vector<double> * copy_spectra(vector<double> * spectra, int ik)
 }
 
 
+/////////////////////////////////////////////////////
+//main routines called in driver function
+/////////////////////////////////////////////////////
+
+void set_thermal_spectra( vector<readindata::particle_info> all_particles,
+							vector<int> chosen_resonance_indices )
+{
+	//set thermal spectra for all needed resonances
+	cout << "Starting thermal calculations..." << endl;
+	#pragma omp parallel for
+	for (int iRes = 0; iRes < n_resonances; iRes++)
+	{
+		printf("Hello World (call #%d) from thread = %d, nthreads = %d\n",
+				iRes, omp_get_thread_num(), omp_get_num_threads());
+		cout << "Thread = " << omp_get_thread_num()
+				<< " of " << omp_get_num_threads() << " currently devoted to "
+				<< all_particles[chosen_resonance_indices[iRes]].name
+				<< " spectra:\n";
+		cout << " * working on "
+				<< all_particles[chosen_resonance_indices[iRes]].name
+				<< " spectra..." << endl;
+
+//if (chosen_resonance_indices[iRes]==1)
+//	continue;
+
+		//loop over momenta
+		for (int ipT = 0; ipT < n_pT_pts; ipT++)
+		for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
+		for (int ipY = 0; ipY < tmp_n_pY_pts; ipY++)
+		{
+			/*cout << "  --> computing "
+					<< all_particles[chosen_resonance_indices[iRes]].name
+					<< " spectra at pT==" << pT_pts[ipT]
+					<< ", pphi==" << pphi_pts[ipphi]
+					<< ", pY==" << Del_pY_pts[ipY] << endl;*/
+			tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+				= Cal_dN_dypTdpTdphi_toy_func(
+					chosen_resonance_indices[iRes],
+					&all_particles,
+					pT_pts[ipT], pphi_pts[ipphi], tmp_Del_pY_pts[ipY] );
+		}
+		cout << "Finished working on "
+				<< all_particles[chosen_resonance_indices[iRes]].name
+				<< " spectra!" << endl;
+	}
+	cout << "Finished thermal calculations!" << endl;
+
+	return;
+}
 
 
-//////////////////////////////////////////////////////////////
-//some functions to help check the phase space integrations
-//////////////////////////////////////////////////////////////
+void do_chebyshev_interpolation(vector<double> * old_vals, vector<double> * new_vals)
+{
+	for (int iRes = 0; iRes < n_resonances; iRes++)
+	for (int ipT = 0; ipT < n_pT_pts; ipT++)
+	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
+	{
+		for (int ipY = 0; ipY < tmp_n_pY_pts; ++ipY)
+		{
+			old_vals->at(ipY) = tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
+			//imag[ipY] = tmp_full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
+			cout << "old: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << old_vals->at(ipY) << endl;
+		}
 
+		cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, old_vals, &Del_pY_pts, new_vals);
+		//cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, &imag, &Del_pY_pts, &interp_imag);
 
+		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
+		{
+			full_resonance_spectra_re[( ( iRes * n_pT_pts + ipT ) * n_pphi_pts + ipphi ) * n_pY_pts + ipY]
+				 = new_vals->at(ipY);
+			//full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
+			//	 = interp_imag[ipY];
+			//cout << "new: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << new_vals->at(ipY) << endl;			
+		}
 
+//if (1) exit (8);
+	}
 
-
-
+	return;
+}
 
 // End of file

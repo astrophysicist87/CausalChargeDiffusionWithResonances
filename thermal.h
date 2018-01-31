@@ -18,13 +18,9 @@ using namespace std;
 extern vector<double> pT_pts, pT_wts;
 extern vector<double> pphi_pts, pphi_wts;
 extern vector<double> Del_pY_pts, Del_pY_wts;
-//extern double * tau_pts, * tau_wts;
 extern double * x_pts, * x_wts;
-//extern double * phi_pts, * phi_wts;
 
-//extern const int n_tau_pts;
 extern const int n_r_pts;
-//extern const int n_phi_pts;
 extern const double TFO;
 
 //define some parameters for the exact emission function

@@ -12,6 +12,8 @@ using namespace std;
 
 namespace cheb_int
 {
+	vector<double> x_pts;
+
 	inline void reset(vector<double> * v, double val = 0.0)
 	{
 		fill(v->begin(), v->end(), val);
@@ -31,7 +33,7 @@ namespace cheb_int
 
 		reset(new_values);
 
-		vector<double> x_pts(npts);
+		x_pts.resize(npts, 0.0);
 		for (int k = 0; k < npts; ++k)
 			x_pts.at(k) = - cos( M_PI*(2.*(k+1.) - 1.) / (2.*npts) );
 
