@@ -166,19 +166,12 @@ int main(int argc, char *argv[])
 //if (1) exit (8);
 
 	full_resonance_spectra_re.resize(n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
-	//vector<double> full_resonance_spectra_im (n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
-
-	vector<double> real(tmp_n_pY_pts);
-	//vector<double> imag(tmp_n_pY_pts);
-	vector<double> interp_real(n_pY_pts);
-	//vector<double> interp_imag(n_pY_pts);
-
-
+	full_resonance_spectra_im.resize(n_resonances*n_pT_pts*n_pphi_pts*n_pY_pts);
 
 
 
 	//one of the main functions
-	do_chebyshev_interpolation(&real, &interp_real);
+	do_chebyshev_interpolation();
 
 
 
@@ -370,17 +363,20 @@ void set_thermal_spectra( vector<readindata::particle_info> all_particles,
 }
 
 
-void do_chebyshev_interpolation(vector<double> * old_vals, vector<double> * new_vals)
+void do_chebyshev_interpolation()
 {
+	vector<double> old_vals;
+	vector<double> new_vals;
+
 	for (int iRes = 0; iRes < n_resonances; iRes++)
 	for (int ipT = 0; ipT < n_pT_pts; ipT++)
 	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
 	{
 		for (int ipY = 0; ipY < tmp_n_pY_pts; ++ipY)
 		{
-			old_vals->at(ipY) = tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
+			old_vals.at(ipY) = tmp_full_resonance_spectra_re[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
 			//imag[ipY] = tmp_full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)];
-			cout << "old: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << old_vals->at(ipY) << endl;
+			//cout << "old: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << old_vals.at(ipY) << endl;
 		}
 
 		cheb_int::chebyshev_interpolate(&tmp_Del_pY_pts, old_vals, &Del_pY_pts, new_vals);
@@ -389,10 +385,10 @@ void do_chebyshev_interpolation(vector<double> * old_vals, vector<double> * new_
 		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
 		{
 			full_resonance_spectra_re[( ( iRes * n_pT_pts + ipT ) * n_pphi_pts + ipphi ) * n_pY_pts + ipY]
-				 = new_vals->at(ipY);
+				 = new_vals.at(ipY);
 			//full_resonance_spectra_im[res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)]
 			//	 = interp_imag[ipY];
-			//cout << "new: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << new_vals->at(ipY) << endl;			
+			//cout << "new: " << iRes << "   " << ipT << "   " << ipphi << "   " << ipY << "   " << new_vals.at(ipY) << endl;			
 		}
 
 //if (1) exit (8);
