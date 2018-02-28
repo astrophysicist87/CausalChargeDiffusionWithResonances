@@ -16,7 +16,8 @@ decay/readindata.h \
 decay/parameters.h \
 asymptotics.h \
 thermal.h \
-chebyshev.h
+chebyshev.h \
+main.h
 
 MAKEFILE=makefile
 
@@ -25,7 +26,7 @@ COMMAND=run_test
 OBJS= $(addsuffix .o, $(basename $(SRCS)))
 
 CC= g++
-CFLAGS= -pg -g -O3 -fopenmp
+CFLAGS= -g -O3
 
 WARNFLAGS=
 LDFLAGS= -lgsl -lgslcblas

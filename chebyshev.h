@@ -13,12 +13,45 @@ using namespace std;
 namespace cheb_int
 {
 	vector<double> x_pts;
+	vector<double> nums, dens, coeffs_array;
+	double * cfs_for_eval;
+
+	gsl_cheb_series *cs;
 
 	inline void reset(vector<double> * v, double val = 0.0)
 	{
 		fill(v->begin(), v->end(), val);
 	}
 
+	void set_up( int npts )
+	{
+		x_pts.resize(npts, 0.0);
+		for (int k = 0; k < npts; ++k)
+			x_pts.at(k) = - cos( M_PI*(2.*(k+1.) - 1.) / (2.*npts) );
+
+		int n_coeffs = npts;
+		coeffs_array.resize(npts);
+		nums.resize(npts*npts);
+		dens.resize(npts);
+
+		for (int j = 0; j < npts; ++j)
+		{
+			dens[j] = 0.0;
+			for (int k = 0; k < npts; ++k)
+			{
+				double Tjk = csf::Tfun(j, x_pts[k]);
+				dens[j] += Tjk*Tjk;
+				nums[j*npts+k] = Tjk;
+			}
+		}
+
+		cfs_for_eval = new double [npts];
+
+		//////////////////////////////////
+		cs = gsl_cheb_alloc (npts - 1);
+
+		return;
+	}
 
 	void chebyshev_interpolate(
 			vector<double> * old_nodes, vector<double> * old_values,
@@ -33,36 +66,15 @@ namespace cheb_int
 
 		reset(new_values);
 
-		x_pts.resize(npts, 0.0);
-		for (int k = 0; k < npts; ++k)
-			x_pts.at(k) = - cos( M_PI*(2.*(k+1.) - 1.) / (2.*npts) );
-
-		int n_coeffs = npts;
-		double coeffs_array[npts];
-		double nums[npts*npts];
-		double dens[npts];
-
-		for (int j = 0; j < npts; ++j)
-		{
-			dens[j] = 0.0;
-			for (int k = 0; k < npts; ++k)
-			{
-				double Tjk = csf::Tfun(j, x_pts[k]);
-				dens[j] += Tjk*Tjk;
-				nums[j*npts+k] = Tjk;
-			}
-		}
-
-		int icf = 0;
-		double * cfs_for_eval = new double [npts];
-
 		//////////////////////////////////
 		//separate out 0th coefficient for additional factor of 2.0
+		int icf = 0;
 		coeffs_array[0] = 0.0;
 		for (int k = 0; k < npts; ++k)
 			coeffs_array[0] += 2.0*old_values->at(k) * nums[0*npts+k];
 
 		cfs_for_eval[icf++] = coeffs_array[0] / dens[0];
+
 		for (int j = 1; j < npts; ++j)
 		{
 			coeffs_array[j] = 0.0;
@@ -71,25 +83,22 @@ namespace cheb_int
 			cfs_for_eval[icf++] = coeffs_array[j] / dens[j];
 		}
 
-		//////////////////////////////////
-		gsl_cheb_series *cs;
-		cs = gsl_cheb_alloc (npts - 1);
 		cs->a = old_min;
 		cs->b = old_max;
 		cs->c = cfs_for_eval;
-//cout << old_min << "   " << old_max << endl;
-//for (int i = 0; i < npts; ++i)
-//	cout << cfs_for_eval[i] << endl;
-
 		for (int iN = 0; iN < Npts; ++iN)
 		{
-	//cout << "iN = " << iN << " of " << new_nodes->size() << " and " << new_values->size() << endl;
+			//cout << "iN = " << iN << " of " << new_nodes->size() << " and " << new_values->size() << endl;
 			double new_point = new_nodes->at(iN);
 			new_values->at(iN) = gsl_cheb_eval (cs, new_point);
 		}
 
-		delete [] cfs_for_eval;
+		return;
+	}
 
+	void clean_up()
+	{
+		delete [] cfs_for_eval;
 		return;
 	}
 }
