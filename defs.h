@@ -40,6 +40,13 @@ inline int res_FIX_K_vector_indexer(const int iRes, const int ipT, const int ipp
 	);
 }
 
+inline int res_FIX_K_vector_indexer2(const int iRes, const int ipT, const int ipphi, const int ipY)
+{
+	return (
+		( ( iRes * n_pT_pts + ipT ) * n_pphi_pts + ipphi ) * n_pY_pts + ipY
+	);
+}
+
 inline int scriptFn_vector_indexer(const int ik, const int ipY)
 {
 	return (

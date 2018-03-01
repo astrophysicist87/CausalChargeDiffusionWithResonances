@@ -88,6 +88,7 @@ double Cal_dN_dypTdpTdphi_toy_func(
 	return (result);
 }
 
+	bool using_azimuthal_symmetry = false;
 	const double PTCHANGE = 1.0;	//GeV
 	int target_pid = -1, particle_monval = -1;
 	int n_resonance = -1;
@@ -123,7 +124,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 										vector<int> chosen_resonance_indices_in,
 										vector<double> * spectra_re_in,
 										vector<double> * spectra_im_in,
-										int target_particle_id_in)
+										int target_particle_id_in,
+										bool assume_azimuthal_symmetry)
 	{
 		all_particles = all_particles_in;
 
@@ -161,7 +163,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 
 				Do_resonance_integrals( idc, current_resonance_pid,
 										daughter_resonance_particle_id,
-										spectra_re_in, spectra_im_in );
+										spectra_re_in, spectra_im_in,
+										assume_azimuthal_symmetry );
 			}
 		}			
 									// END of decay channel loop
@@ -171,18 +174,21 @@ double Cal_dN_dypTdpTdphi_toy_func(
 	void Do_resonance_integrals(int decay_channel,
 								int parent_pid, int daughter_pid,
 								vector<double> * spec_re_ptr,
-								vector<double> * spec_im_ptr)
+								vector<double> * spec_im_ptr,
+								bool assume_azimuthal_symmetry)
 	{
 		int n_body = current_reso_nbody;
 
 		if (n_body == 2)
 			two_body_decay( decay_channel,
 							parent_pid, daughter_pid,
-							spec_re_ptr, spec_im_ptr );
+							spec_re_ptr, spec_im_ptr,
+							assume_azimuthal_symmetry );
 		else
 			three_body_decay( decay_channel,
 								parent_pid, daughter_pid,
-								spec_re_ptr, spec_im_ptr );
+								spec_re_ptr, spec_im_ptr,
+								assume_azimuthal_symmetry );
 
 		return;
 	}
@@ -224,7 +230,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 
 	///////////////////////////////////////////////////////////////
 	void two_body_decay( int dc_idx, int parent_pid, int daughter_pid,
-							vector<double> * spec_re, vector<double> * spec_im )
+							vector<double> * spec_re, vector<double> * spec_im,
+							bool assume_azimuthal_symmetry )
 	{
 		//useful for interpolation
 		vector<double> log_spec_re(spec_re->size());
@@ -251,6 +258,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
 		for (int ipphi = 0; ipphi < n_pphi_pts; ++ipphi)
 		{
+			if (assume_azimuthal_symmetry and ipphi > 0)
+				continue;
 			double local_pT = pT_pts[ipT];
 			double local_pphi = pphi_pts[ipphi];
 			double local_pY = Del_pY_pts[ipY];
@@ -269,17 +278,29 @@ double Cal_dN_dypTdpTdphi_toy_func(
 					double PYR = VEC_n2_P_Y[iv];
 					double PphiR = VEC_n2_PPhi_tilde[NB2_indexer(iv,izeta)];
 
-					for (int tempidx = 0; tempidx <= 1; ++tempidx)
+					if (assume_azimuthal_symmetry)
 					{
-						if (tempidx != 0)
-							PphiR = VEC_n2_PPhi_tildeFLIP[NB2_indexer(iv,izeta)];		//also takes Pp --> Pm
-
 						//spectra
-						Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_re, spec_re, &log_spec_re, &sign_spec_re);
-						Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_im, spec_im, &log_spec_im, &sign_spec_im);
-					}												// end of tempidx sum
-					zetasum_re += VEC_n2_zeta_factor[NB2_indexer(iv,izeta)]*Csum_re;
-					zetasum_im += VEC_n2_zeta_factor[NB2_indexer(iv,izeta)]*Csum_im;
+						Edndp3(PTR, PYR, parent_idx, &Csum_re, spec_re, &log_spec_re, &sign_spec_re);
+						Edndp3(PTR, PYR, parent_idx, &Csum_im, spec_im, &log_spec_im, &sign_spec_im);
+						//extra factor of 2 for skipped +/- tempidx loop
+						zetasum_re += 2.0*VEC_n2_zeta_factor[NB2_indexer(iv,izeta)]*Csum_re;
+						zetasum_im += 2.0*VEC_n2_zeta_factor[NB2_indexer(iv,izeta)]*Csum_im;
+					}
+					else
+					{
+						for (int tempidx = 0; tempidx <= 1; ++tempidx)
+						{
+							if (tempidx != 0)
+								PphiR = VEC_n2_PPhi_tildeFLIP[NB2_indexer(iv,izeta)];		//also takes Pp --> Pm
+
+							//spectra
+							Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_re, spec_re, &log_spec_re, &sign_spec_re);
+							Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_im, spec_im, &log_spec_im, &sign_spec_im);
+						}												// end of tempidx sum
+						zetasum_re += VEC_n2_zeta_factor[NB2_indexer(iv,izeta)]*Csum_re;
+						zetasum_im += VEC_n2_zeta_factor[NB2_indexer(iv,izeta)]*Csum_im;
+					}
 				}													// end of zeta sum
 				vsum_re += VEC_n2_v_factor[iv]*zetasum_re;
 				vsum_im += VEC_n2_v_factor[iv]*zetasum_im;
@@ -301,7 +322,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 
 	///////////////////////////////////////////////////////////////
 	void three_body_decay( int dc_idx, int parent_pid, int daughter_pid,
-							vector<double> * spec_re, vector<double> * spec_im )
+							vector<double> * spec_re, vector<double> * spec_im,
+							bool assume_azimuthal_symmetry )
 	{
 		//useful for interpolation
 		vector<double> log_spec_re(spec_re->size());
@@ -334,6 +356,8 @@ double Cal_dN_dypTdpTdphi_toy_func(
 		for (int ipY = 0; ipY < n_pY_pts; ++ipY)
 		for (int ipphi = 0; ipphi < n_pphi_pts; ++ipphi)
 		{
+			if (assume_azimuthal_symmetry and ipphi > 0)
+				continue;
 			double local_pT = pT_pts[ipT];
 			double local_pphi = pphi_pts[ipphi];
 			double local_pY = Del_pY_pts[ipY];
@@ -353,17 +377,29 @@ double Cal_dN_dypTdpTdphi_toy_func(
 						double PYR = VEC_n3_P_Y[is*n_v_pts+iv];
 						double PphiR = VEC_n3_PPhi_tilde[NB3_indexer(is,iv,izeta)];
 
-						for (int tempidx = 0; tempidx <= 1; ++tempidx)
+						if (assume_azimuthal_symmetry)
 						{
-							if (tempidx != 0)
-								PphiR = VEC_n3_PPhi_tildeFLIP[NB3_indexer(is,iv,izeta)];		//also takes Pp --> Pm
-
 							//spectra
-							Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_re, spec_re, &log_spec_re, &sign_spec_re);
-							Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_im, spec_im, &log_spec_im, &sign_spec_im);
-						}										// end of tempidx sum
-						zetasum_re += VEC_n3_zeta_factor[NB3_indexer(is,iv,izeta)]*Csum_re;
-						zetasum_im += VEC_n3_zeta_factor[NB3_indexer(is,iv,izeta)]*Csum_im;
+							Edndp3(PTR, PYR, parent_idx, &Csum_re, spec_re, &log_spec_re, &sign_spec_re);
+							Edndp3(PTR, PYR, parent_idx, &Csum_im, spec_im, &log_spec_im, &sign_spec_im);
+							//extra factor of 2 for skipped +/- tempidx loop
+							zetasum_re += 2.0*VEC_n3_zeta_factor[NB3_indexer(is,iv,izeta)]*Csum_re;
+							zetasum_im += 2.0*VEC_n3_zeta_factor[NB3_indexer(is,iv,izeta)]*Csum_im;
+						}
+						else
+						{
+							for (int tempidx = 0; tempidx <= 1; ++tempidx)
+							{
+								if (tempidx != 0)
+									PphiR = VEC_n3_PPhi_tildeFLIP[NB3_indexer(is,iv,izeta)];		//also takes Pp --> Pm
+
+								//spectra
+								Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_re, spec_re, &log_spec_re, &sign_spec_re);
+								Edndp3(PTR, PphiR, PYR, parent_idx, &Csum_im, spec_im, &log_spec_im, &sign_spec_im);
+							}										// end of tempidx sum
+							zetasum_re += VEC_n3_zeta_factor[NB3_indexer(is,iv,izeta)]*Csum_re;
+							zetasum_im += VEC_n3_zeta_factor[NB3_indexer(is,iv,izeta)]*Csum_im;
+						}
 					}											// end of zeta sum
 					vsum_re += VEC_n3_v_factor[is*n_v_pts+iv]*zetasum_re;
 					vsum_im += VEC_n3_v_factor[is*n_v_pts+iv]*zetasum_im;
@@ -568,7 +604,7 @@ double Cal_dN_dypTdpTdphi_toy_func(
 				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
 				vector<double> * loc_sign_spectra_ptr)
 	{
-		bool use_exact_Edndp3 = true;
+		bool use_exact_Edndp3 = false;
 		if (use_exact_Edndp3)
 		{
 			*result += Cal_dN_dypTdpTdphi_toy_func(
@@ -742,8 +778,140 @@ double Cal_dN_dypTdpTdphi_toy_func(
 		//interpolate over pY last
 		*result += lin_int(pyr-py0, one_by_pYdiff, f1, f2);
 
+/*cout << "CHECK interpolation: "<< parent_idx << "   " << ptr << "   " << pphir << "   " << pyr << "   "
+		<< Cal_dN_dypTdpTdphi_toy_func(
+				chosen_resonance_indices[parent_idx], &all_particles,
+				ptr, pphir, pyr ) << "   " << lin_int(pyr-py0, one_by_pYdiff, f1, f2) << endl
+		<< "points: " << Cal_dN_dypTdpTdphi_toy_func(
+				chosen_resonance_indices[parent_idx], &all_particles,
+				pT0, phi0, py0 )
+		<< "   " << Cal_dN_dypTdpTdphi_toy_func(
+				chosen_resonance_indices[parent_idx], &all_particles,
+				pT1, phi0, py0 ) << endl
+		<< "fijk: " << f111 << "   " << f112 << "   " << f121 << "   " << f122 << "   " << f211 << "   " << f212 << "   " << f221 << "   " << f222 << endl
+		<< "fij: " << f11 << "   " << f12 << "   " << f21 << "   " << f22 << endl
+		<< "fi: " << f1 << "   " << f2 << endl;*/
+
 		return;
 	}
+
+	///////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////
+	void Edndp3(double ptr, double pyr, int parent_idx, double * result,
+				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
+				vector<double> * loc_sign_spectra_ptr)
+	{
+		bool use_exact_Edndp3 = true;
+		if (use_exact_Edndp3)
+		{
+			*result += Cal_dN_dypTdpTdphi_toy_func(
+						chosen_resonance_indices[parent_idx], &all_particles,
+						ptr, 0.0, pyr );
+			return;
+		}
+
+		double py0, py1;
+		double f1 = 0.0, f2 = 0.0;
+
+		int npT_max = n_pT_pts - 1;
+		int npy_max = n_pY_pts - 1;
+
+		// locate pT interval
+		int npt = 1;
+		while ((ptr > pT_pts[npt]) &&
+				(npt < npT_max)) ++npt;
+		double pT0 = pT_pts[npt-1];
+		double pT1 = pT_pts[npt];
+
+		// locate py interval
+		long npy = 1, npym1 = 0;
+		if(pyr > Del_pY_max)	//if rapidity is greater than maximum rapidity grid point
+		{
+			py0 = Del_pY_max;
+			py1 = Del_pY_max;
+			if (VERBOSE > 2) cerr << "WARNING in Edndp3(): " << pyr << " > " << Del_pY_max << endl;
+			return;
+		}
+		else if(pyr < Del_pY_min)	//else if rapidity is less than minimum rapidity grid point
+		{								//this can't happen when USE_RAPIDITY_SYMMETRY is true, since pyr = abs(spyr) >= 0
+			py0 = Del_pY_min;
+			py1 = Del_pY_min;
+			if (VERBOSE > 2) cerr << "WARNING in Edndp3(): " << pyr << " < " << Del_pY_min << endl;
+			return;
+		}
+		else						//if rapidity is within grid range
+		{
+			while ((pyr > Del_pY_pts[npy]) &&
+					(npy < npy_max)) ++npy;
+			npym1 = npy - 1;
+			py0 = Del_pY_pts[npym1];
+			py1 = Del_pY_pts[npy];
+		}
+
+		if (pT0==pT1 || py0==py1)
+		{
+			cerr << "ERROR in Edndp3(): pT and/or py values equal!" << endl;
+			exit(1);
+		}
+
+		double one_by_pTdiff = 1./(pT1 - pT0), one_by_pYdiff = 1./(py1 - py0 + 1.e-10);
+		double del_ptr_pt0 = ptr - pT0, del_pyr_py0 = pyr - py0;
+
+		// choose pt-pphi slice of resonance info arrays
+		double log_f11 = (*loc_log_spectra_ptr)[res_vector_indexer(parent_idx,npt-1,0,npym1)];
+		double log_f21 = (*loc_log_spectra_ptr)[res_vector_indexer(parent_idx,npt,0,npym1)];
+		double log_f12 = (*loc_log_spectra_ptr)[res_vector_indexer(parent_idx,npt-1,0,npy)];
+		double log_f22 = (*loc_log_spectra_ptr)[res_vector_indexer(parent_idx,npt,0,npy)];
+
+		double f11 = (*loc_spectra_ptr)[res_vector_indexer(parent_idx,npt-1,0,npym1)];
+		double f21 = (*loc_spectra_ptr)[res_vector_indexer(parent_idx,npt,0,npym1)];
+		double f12 = (*loc_spectra_ptr)[res_vector_indexer(parent_idx,npt-1,0,npy)];
+		double f22 = (*loc_spectra_ptr)[res_vector_indexer(parent_idx,npt,0,npy)];
+
+		/////////////////////////////////////////////////////////////////
+		// interpolate over pT values first
+		/////////////////////////////////////////////////////////////////
+		if(ptr > PTCHANGE)				// if pT interpolation point is larger than PTCHANGE (currently 1.0 GeV)
+		{
+			double sign_of_f11 = (*loc_sign_spectra_ptr)[res_vector_indexer(parent_idx,npt-1,0,npym1)];
+			double sign_of_f21 = (*loc_sign_spectra_ptr)[res_vector_indexer(parent_idx,npt,0,npym1)];
+			double sign_of_f12 = (*loc_sign_spectra_ptr)[res_vector_indexer(parent_idx,npt-1,0,npy)];
+			double sign_of_f22 = (*loc_sign_spectra_ptr)[res_vector_indexer(parent_idx,npt,0,npy)];
+		
+			//*******************************************************************************************************************
+			// set f1
+			//*******************************************************************************************************************
+			// if using extrapolation and spectra at pT1 has larger magnitude than at pT0 (or the signs are different), just return zero
+			if ( ptr > pT1 && ( log_f21 > log_f11 || sign_of_f11 * sign_of_f21 < 0 ) )
+				f1 = 0.0;
+			else if (sign_of_f11 * sign_of_f21 > 0)	// if the two points have the same sign in the pT direction, interpolate logs
+				f1 = sign_of_f11 * exp( lin_int(ptr-pT0, one_by_pTdiff, log_f11, log_f21) );
+			else					// otherwise, just interpolate original vals
+				f1 = lin_int(ptr-pT0, one_by_pTdiff, f11, f21);
+			
+			//*******************************************************************************************************************
+			// set f2
+			//*******************************************************************************************************************
+			if ( ptr > pT1 && ( log_f22 > log_f12 || sign_of_f12 * sign_of_f22 < 0 ) )
+				f2 = 0.0;
+			else if (sign_of_f12 * sign_of_f22 > 0)	// if the two points have the same sign in the pT direction, interpolate logs
+				f2 = sign_of_f12 * exp( lin_int(ptr-pT0, one_by_pTdiff, log_f12, log_f22) );
+			else					// otherwise, just interpolate original vals
+				f2 = lin_int(ptr-pT0, one_by_pTdiff, f12, f22);
+			//*******************************************************************************************************************
+		}
+		else						// if pT is smaller than PTCHANGE, just use linear interpolation, no matter what
+		{
+			f1 = lin_int(ptr-pT0, one_by_pTdiff, f11, f21);
+			f2 = lin_int(ptr-pT0, one_by_pTdiff, f12, f22);
+		}
+
+		//interpolate over pY last
+		*result += lin_int(pyr-py0, one_by_pYdiff, f1, f2);
+
+		return;
+	}
+
 
 	int load_decay_channel_info(
 			vector<readindata::particle_info> all_particles,

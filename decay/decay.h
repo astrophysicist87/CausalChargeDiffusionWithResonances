@@ -48,12 +48,14 @@ namespace decay
 										vector<int> chosen_resonance_indices,
 										vector<double> * spectra_re_in,
 										vector<double> * spectra_im_in,
-										int target_particle_id_in );
+										int target_particle_id_in,
+										bool assume_azimuthal_symmetry = false );
 	void Do_resonance_integrals( int decay_channel,
 									int parent_pid,
 									int daughter_pid,
 									vector<double> * spec_re,
-									vector<double> * spec_im );
+									vector<double> * spec_im,
+									bool assume_azimuthal_symmetry );
 
 	//decay routines
 	inline int NB2_indexer(const int iv, const int izeta);
@@ -74,12 +76,17 @@ namespace decay
 
 	//decay routines
 	void two_body_decay( int dc_idx, int parent_idx, int daughter_idx,
-							vector<double> * spec_re, vector<double> * spec_im );
+							vector<double> * spec_re, vector<double> * spec_im,
+							bool assume_azimuthal_symmetry );
 	void three_body_decay( int dc_idx, int parent_idx, int daughter_idx,
-							vector<double> * spec_re, vector<double> * spec_im );
+							vector<double> * spec_re, vector<double> * spec_im,
+							bool assume_azimuthal_symmetry );
 
 	//spectra interpolator
 	void Edndp3(double ptr, double pphir, double pyr, int parent_idx, double * result,
+				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
+				vector<double> * loc_sign_spectra_ptr);
+	void Edndp3(double ptr, double pyr, int parent_idx, double * result,
 				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
 				vector<double> * loc_sign_spectra_ptr);
 

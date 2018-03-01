@@ -106,6 +106,7 @@ void operation_mode_0()
 	sw.Reset();
 
 	//print out results
+	//int ipphi = 0;
 	for (int iRes = 0; iRes < n_resonances; iRes++)
 	for (int ipT = 0; ipT < n_pT_pts; ipT++)
 	for (int ipphi = 0; ipphi < n_pphi_pts; ipphi++)
@@ -138,7 +139,7 @@ void operation_mode_0()
 			chosen_resonance_indices,
 			&full_resonance_spectra_re,
 			&full_resonance_spectra_im,
-			particle_idx );
+			particle_idx, true );
 	sw.Stop();
 	cout << "Did resonance feeddown in " << sw.printTime() << " sec." << endl;
 	sw.Reset();
@@ -464,7 +465,7 @@ void print_results(vector<readindata::particle_info> * all_particles_ptr, vector
 	for (int ipY = 0; ipY < n_pY_pts; ipY++)
 		cout << all_particles_ptr->at(chosen_resonance_indices_ptr->at(iRes)).name << ":   "
 				<< pT_pts.at(ipT) << "   " << pphi_pts.at(ipphi) << "   " << Del_pY_pts.at(ipY) << "   "
-				<< full_resonance_spectra_re.at(res_FIX_K_vector_indexer(iRes, ipT, ipphi, ipY)) << endl;
+				<< full_resonance_spectra_re.at(res_FIX_K_vector_indexer2(iRes, ipT, ipphi, ipY)) << endl;
 	return;
 }
 
