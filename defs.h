@@ -33,6 +33,13 @@ inline int res_vector_indexer(const int ik, const int iRes, const int ipT, const
 	);
 }
 
+inline int res_vector_indexer2(const int ik, const int iRes, const int ipT, const int ipphi, const int ipY)
+{
+	return (
+		( ( ( ik * n_resonances + iRes ) * n_pT_pts + ipT ) * n_pphi_pts + ipphi ) * n_pY_pts + ipY
+	);
+}
+
 inline int res_FIX_K_vector_indexer(const int iRes, const int ipT, const int ipphi, const int ipY)
 {
 	return (
@@ -50,7 +57,7 @@ inline int res_FIX_K_vector_indexer2(const int iRes, const int ipT, const int ip
 inline int scriptFn_vector_indexer(const int ik, const int ipY)
 {
 	return (
-		ik * tmp_n_pY_pts + ipY
+		ik * n_pY_pts + ipY
 	);
 }
 

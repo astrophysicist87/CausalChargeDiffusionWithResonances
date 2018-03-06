@@ -801,7 +801,7 @@ double Cal_dN_dypTdpTdphi_toy_func(
 				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
 				vector<double> * loc_sign_spectra_ptr)
 	{
-		bool use_exact_Edndp3 = true;
+		bool use_exact_Edndp3 = false;
 		if (use_exact_Edndp3)
 		{
 			*result += Cal_dN_dypTdpTdphi_toy_func(

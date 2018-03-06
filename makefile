@@ -26,7 +26,7 @@ COMMAND=run_test
 OBJS= $(addsuffix .o, $(basename $(SRCS)))
 
 CC= g++
-CFLAGS= -g -O3
+CFLAGS= -pg -g -O3
 
 WARNFLAGS=
 LDFLAGS= -lgsl -lgslcblas

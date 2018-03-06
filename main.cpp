@@ -24,7 +24,7 @@ using namespace std;
 #include "main.h"
 #include "Stopwatch.h"
 
-const int operation_mode = 0;
+const int operation_mode = 1;
 // 0 - run test of normal spectra (using exact toy model defined in thermal.h)
 // 1 - try to get corresponding results for FT'd thermal "spectra" needed for calculation
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 			operation_mode_0();
 			break;
 		case 1:
-			operation_mode_1();
+			operation_mode_1(true);
 			break;
 		default:
 			cout << "Option not supported!" << endl;
