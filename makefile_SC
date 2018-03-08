@@ -1,7 +1,7 @@
 SHELL=/bin/sh
 
 SRCS= \
-CausalChargeDiffusion.cpp \
+plot_SC.cpp \
 gauss_quadrature.cpp \
 lib.cpp
 
@@ -11,9 +11,9 @@ defs.h \
 lib.h \
 asymptotics.h
 
-MAKEFILE=makefile
+MAKEFILE=makefile_SC
 
-COMMAND=run_CCD
+COMMAND=plot_SC
 
 OBJS= $(addsuffix .o, $(basename $(SRCS)))
 
@@ -29,8 +29,8 @@ LIBS= -L/sw/lib -I/sw/include
 $(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
 	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(LIBS)
 
-CausalChargeDiffusion.o : CausalChargeDiffusion.cpp defs.h
-	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c CausalChargeDiffusion.cpp -o CausalChargeDiffusion.o
+plot_SC.o : plot_SC.cpp defs.h
+	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c plot_SC.cpp -o plot_SC.o
 
 clean:
 	rm -f $(OBJS)
