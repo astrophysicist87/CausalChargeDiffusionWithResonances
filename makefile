@@ -10,7 +10,7 @@ decay/decay.cpp
 HDRS= \
 gauss/gauss_quadrature.h \
 lib.h \
-defs.h \
+indexers.h \
 decay/decay.h \
 decay/readindata.h \
 decay/parameters.h \

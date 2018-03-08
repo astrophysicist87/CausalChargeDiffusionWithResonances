@@ -37,10 +37,10 @@ int main(int argc, char *argv[])
 	switch (operation_mode)
 	{
 		case 0:
-			operation_mode_0();
+			operation_mode_0(false);
 			break;
 		case 1:
-			operation_mode_1(true);
+			operation_mode_1(false);
 			break;
 		default:
 			cout << "Option not supported!" << endl;

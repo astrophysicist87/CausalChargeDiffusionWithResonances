@@ -12,19 +12,6 @@ using namespace std;
 
 #include "lib.h"
 
-void linspace(vector<double> & x, double a, double b)
-{
-//returns vector x of n linearly spaced points, with a and b as endpoints
-	int n = x.size();
-	double Del_x = (b-a)/(double)(n-1);
-
-	//assume x has length n already
-	for (int i = 0; i < n; i++)
-		x[i] = a + Del_x * (double)i;
-
-	return;
-}
-
 double integrate_1D(double (*f)(double), double * xpts, double * xwts, int nx)
 {
     double sum = 0.0;
@@ -76,6 +63,36 @@ double integrate_2D(double (*f)(double, double), double * xpts, double * ypts, d
 
 	return (sum);
 }
+
+/*double integrate_1D(double (*f)(double), double Lx, int nx)
+{
+    double sum = 0.0;
+    for (int ix = 1; ix < nx; ix++)
+	{
+		double xp = (double)ix * M_PI / (double)nx;
+		double s1 = sin(xp);
+        sum += (Lx * M_PI) * (*f)(Lx * cot(xp)) / (nx*s1*s1);
+	}
+
+    return (sum);
+}
+
+
+double integrate_2D(double (*f)(double, double), double Lx, double Ly, int nx, int ny)
+{
+    double sum = 0.0;
+    for (int ix = 1; ix < nx; ix++)
+    for (int iy = 1; iy < ny; iy++)
+	{
+		double xp = (double)ix * M_PI / (double)nx;
+		double yp = (double)iy * M_PI / (double)ny;
+		double s1 = sin(xp);
+		double s2 = sin(yp);
+        sum += (Lx * Ly * M_PI * M_PI) * (*f)(Lx * cot(xp), Ly * cot(yp)) / (nx*ny*s1*s1*s2*s2);
+	}
+
+    return (sum);
+}*/
 
 // some interpolation routines here
 double interpolate1D(double * x, double * y, double x0, long size, int kind, bool uniform_spacing, bool returnflag /*= false*/, double default_return_value /* = 0*/)
@@ -361,6 +378,27 @@ long binarySearch(double * A, int length, double value, bool skip_out_of_range /
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
+/*complex<double> Hypergeometric0F1(complex<double> a_in, complex<double> z_in)
+{
+	complex<double> a = a_in, z = z_in;
+
+	complex<double> sum = 0.0, oldsum = 0.0;
+	complex<double> term = 1.0;
+	long int i = 0;
+	//for (int i = 0; i <= max_terms; ++i)
+	do
+	{
+		oldsum = sum;
+		sum += term;
+		term *= z/(a*double(i+1));
+		a += 1.0;
+		++i;
+	} while (2.0*abs(sum-oldsum)/abs(sum+oldsum) >= tolerance);
+	//cout << setw(15) << setprecision(12) << "Hypergeometric0F1: " << a_in.real() << "   " << a_in.imag()
+	//		<< "   " << z_in.real() << "   " << z_in.imag() << "   " << sum.real() << "   " << sum.imag() << endl;
+	return (sum);
+}*/
+
 complex<double> Hypergeometric1F1(complex<double> a_in, complex<double> b_in, complex<double> z_in)
 {
 	complex<double> a = a_in, b = b_in, z = z_in;
@@ -405,5 +443,27 @@ complex<double> Hypergeometric1F2(complex<double> a_in, complex<double> b0_in, c
 	return (sum);
 }
 
+/*
+complex<double> SFL_Hypergeometric1F1(complex<double> a_in, complex<double> b_in, complex<double> z_in)
+{
+	struct SFL::complex a, b, z, ans;
+	int top = -1;
+	a.x = a_in.real();
+	a.y = a_in.imag();
+	b.x = b_in.real();
+	b.y = b_in.imag();
+	z.x = z_in.real();
+	z.y = z_in.imag();
+
+	SFL::c1f1(&a, &b, &z, top, &ans);
+
+	complex<double> ans_out(ans.x, ans.y);
+
+	//cout << setw(15) << setprecision(12) << "SFL_Hypergeometric1F1: " << a_in.real() << "   " << a_in.imag() << "   " << b_in.real() << "   " << b_in.imag()
+	//		<< "   " << z_in.real() << "   " << z_in.imag() << "   " << ans_out.real() << "   " << ans_out.imag() << endl;
+
+	return (ans_out);
+}
+*/
 
 //End of file
