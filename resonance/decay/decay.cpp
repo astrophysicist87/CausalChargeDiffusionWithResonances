@@ -14,79 +14,81 @@ using namespace std;
 
 #include "decay.h"
 
+using namespace parameters;
+
 extern vector<double> pT_pts, pT_wts;
 extern vector<double> pphi_pts, pphi_wts;
 extern vector<double> Del_pY_pts, Del_pY_wts;
 
-extern double * x_pts, * x_wts;
+/*extern double * x_pts, * x_wts;
 extern const int n_r_pts;
-extern const double TFO;
+extern const double TFO;*/
 
 namespace decay
 {
-const double Rad = 5.0, Del_tau = 1.0, tau0 = 5.0, etaf = 0.6;
+	/*const double Rad = 5.0, Del_tau = 1.0, tau0 = 5.0, etaf = 0.6;
 
-inline double Hfactor(double r)
-{
-	return (
-			exp( -r*r/(2.0*Rad*Rad) )
-			);
-}
-
-inline double eta_t(double r)
-{
-	return ( etaf*r/Rad );
-}
-
-double Cal_dN_dypTdpTdphi_toy_func(
-		int local_pid, vector<readindata::particle_info> * all_particles,
-		double pT_loc, double pphi_loc, double pY_loc )
-{
-	const double hbarC = 0.197327053;
-
-	// set particle information
-	double degen = (*all_particles)[local_pid].gspin;
-	double localmass = (*all_particles)[local_pid].mass;
-
-	// set some freeze-out surface information that's constant the whole time
-	double prefactor = degen/sqrt(8.0*M_PI*M_PI*M_PI)/M_PI/hbarC;
-	double Tdec = TFO;	//back to MeV
-	double one_by_Tdec = 1./Tdec;
-
-	double ch_pY = cosh(pY_loc);
-	double sh_pY = sinh(pY_loc);
-
-	double result = 0.0;
-
-	for (int ir = 0; ir < n_r_pts; ++ir)
+	inline double Hfactor(double r)
 	{
-		double mT = sqrt(pT_loc*pT_loc+localmass*localmass);
-
-		//set r-point inside pT loop, since optimal distribution of integration points
-		// depends on value of MT
-		double rmin = 0.0, rmax = 25.0 * Rad / sqrt(1.0 + mT*one_by_Tdec*etaf*etaf);
-		double hw = 0.5 * (rmax - rmin), cen = 0.5 * (rmax + rmin);
-		double rpt = cen + hw * x_pts[ir];
-
-		double local_H = Hfactor(rpt);
-		double ch_eta_t = cosh(eta_t(rpt));
-		double sh_eta_t = sinh(eta_t(rpt));
-
-		double alpha = mT * one_by_Tdec * ch_eta_t;
-		double beta = one_by_Tdec * pT_loc * sh_eta_t;
-		if (alpha > 700.0)
-			continue;
-
-		double K1 = 2.0 * gsl_sf_bessel_K1(alpha);
-		double I0 = gsl_sf_bessel_I0(beta);
-
-		double S_p_with_weight = hw*x_wts[ir]*mT*tau0*rpt*prefactor*local_H*I0;
-
-		result += S_p_with_weight * K1;
+		return (
+				exp( -r*r/(2.0*Rad*Rad) )
+				);
 	}
 
-	return (result);
-}
+	inline double eta_t(double r)
+	{
+		return ( etaf*r/Rad );
+	}
+
+	double Cal_dN_dypTdpTdphi_toy_func(
+			int local_pid, vector<readindata::particle_info> * all_particles,
+			double pT_loc, double pphi_loc, double pY_loc )
+	{
+		const double hbarC = 0.197327053;
+
+		// set particle information
+		double degen = (*all_particles)[local_pid].gspin;
+		double localmass = (*all_particles)[local_pid].mass;
+
+		// set some freeze-out surface information that's constant the whole time
+		double prefactor = degen/sqrt(8.0*M_PI*M_PI*M_PI)/M_PI/hbarC;
+		double Tdec = TFO;	//back to MeV
+		double one_by_Tdec = 1./Tdec;
+
+		double ch_pY = cosh(pY_loc);
+		double sh_pY = sinh(pY_loc);
+
+		double result = 0.0;
+
+		for (int ir = 0; ir < n_r_pts; ++ir)
+		{
+			double mT = sqrt(pT_loc*pT_loc+localmass*localmass);
+
+			//set r-point inside pT loop, since optimal distribution of integration points
+			// depends on value of MT
+			double rmin = 0.0, rmax = 25.0 * Rad / sqrt(1.0 + mT*one_by_Tdec*etaf*etaf);
+			double hw = 0.5 * (rmax - rmin), cen = 0.5 * (rmax + rmin);
+			double rpt = cen + hw * x_pts[ir];
+
+			double local_H = Hfactor(rpt);
+			double ch_eta_t = cosh(eta_t(rpt));
+			double sh_eta_t = sinh(eta_t(rpt));
+
+			double alpha = mT * one_by_Tdec * ch_eta_t;
+			double beta = one_by_Tdec * pT_loc * sh_eta_t;
+			if (alpha > 700.0)
+				continue;
+
+			double K1 = 2.0 * gsl_sf_bessel_K1(alpha);
+			double I0 = gsl_sf_bessel_I0(beta);
+
+			double S_p_with_weight = hw*x_wts[ir]*mT*tau0*rpt*prefactor*local_H*I0;
+
+			result += S_p_with_weight * K1;
+		}
+
+		return (result);
+	}*/
 
 	bool using_azimuthal_symmetry = false;
 	const double PTCHANGE = 1.0;	//GeV
@@ -602,14 +604,14 @@ double Cal_dN_dypTdpTdphi_toy_func(
 				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
 				vector<double> * loc_sign_spectra_ptr)
 	{
-		bool use_exact_Edndp3 = false;
+		/*bool use_exact_Edndp3 = false;
 		if (use_exact_Edndp3)
 		{
 			*result += Cal_dN_dypTdpTdphi_toy_func(
 						chosen_resonance_indices[parent_idx], &all_particles,
 						ptr, pphir, pyr );
 			return;
-		}
+		}*/
 
 		double phi0, phi1, py0, py1;
 		double f11, f21, f12, f22;
@@ -799,14 +801,14 @@ double Cal_dN_dypTdpTdphi_toy_func(
 				vector<double> * loc_spectra_ptr, vector<double> * loc_log_spectra_ptr,
 				vector<double> * loc_sign_spectra_ptr)
 	{
-		bool use_exact_Edndp3 = false;
+		/*bool use_exact_Edndp3 = false;
 		if (use_exact_Edndp3)
 		{
 			*result += Cal_dN_dypTdpTdphi_toy_func(
 						chosen_resonance_indices[parent_idx], &all_particles,
 						ptr, 0.0, pyr );
 			return;
-		}
+		}*/
 
 		double py0, py1;
 		double f1 = 0.0, f2 = 0.0;

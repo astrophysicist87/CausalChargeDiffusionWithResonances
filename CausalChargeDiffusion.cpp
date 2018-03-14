@@ -10,51 +10,11 @@
 
 using namespace std;
 
-#include "defs.h"
 #include "resonance/sfn.h"
+#include "CCDparams.h"
+#include "defs.h"
 
-//const int particle_to_study
-	// 1 - pion
-	// 2 - proton
-	// 3 - kaon
-int particle_to_study;
-
-bool print_dndn_k = true;
-bool print_dndn_Dxi = false;
-//white noise is default
-bool white_noise = true;
-bool white_Green = true;
-
-const double hbarC = 197.33;
-const double xi_infinity = 5.0;
-const double k_infinity = 5.0;
-
-const int n_Dy = 5001;
-const double Delta_y_max = 5.0;
-double Delta_y_step = Delta_y_max / double(n_Dy - 1);
-
-const double DQ = 0.162035;	//fm (rough estimate!)
-double vQ2, tauQ;
-
-long n_interp;
-
-double vs, Neff, tauf, taui, Tf, Ti, nu, nuVB, ds, sf;
-double alpha0, psi0;
-double chi_tilde_mu_mu, chi_tilde_T_mu, chi_tilde_T_T, chi_mu_mu, chi_T_mu, chi_T_T, Delta;
-
-double exp_delta, exp_gamma, exp_nu;
-double T0, mu0, Tc, Pc, nc, sc, wc, muc;
-double A0, A2, A4, C0, B, mui, muf, xi0, xibar0, etaBYs, RD, sPERn, Nf, qD, si, ni;
-double a_at_tauf, vs2_at_tauf, vn2_at_tauf, vsigma2_at_tauf;
-
-const int n_xi_pts = 5000;
-const int n_k_pts = 100;
-const int n_tau_pts = 501;
-double * xi_pts_minf_inf, * xi_wts_minf_inf;
-double * k_pts, * k_wts;
-double * tau_pts, * tau_wts;
-double * T_pts;
-double * running_integral_array;
+using namespace CCD;
 
 ///////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
@@ -347,11 +307,19 @@ int main(int argc, char *argv[])
 	bool run_final_check = true;
 	if (run_final_check)
 	{
-		//vector<complex<double> > sFn = operation_mode_1(false);
+		vector<double> Delta_y_pts(n_Dy);
+		for (int iDy = 0; iDy < n_Dy; iDy++)
+			Delta_y_pts[iDy] = Delta_y_min + (double)iDy * Delta_y_step;
+
+		vector<double> k_pts_vec(n_k_pts);
+		for (int ik = 0; ik < n_k_pts; ++ik)
+			k_pts_vec[ik] = k_pts[ik];
+
+		vector<complex<double> > sFn = sfn::operation_mode_1(Delta_y_pts, k_pts_vec, false);
 		for (int iDy = 0; iDy < n_Dy; iDy++)
 		{
-			double Delta_y = (double)iDy * Delta_y_step;
-			double Delta_xi = Delta_y;
+			//double Delta_y = Delta_y_min + (double)iDy * Delta_y_step;
+			double Delta_y = Delta_y_pts[iDy];
 			for (int ik = 0; ik < n_k_pts; ++ik)
 			{
 //		if (iDy > 0)
@@ -365,14 +333,15 @@ int main(int argc, char *argv[])
 
 				complex<double> z = exp(i * k * Delta_y) * Ftn1 * conj(Ftn2);
 
-				/*int idx_ik_iDpY0 = ik * n_pY_pts + (n_pY_pts-1)/2;
-				int idx_ik_iDpY = ik * n_pY_pts + ipY;
+				int idx_ik_iDpY0 = ik * n_Dy + (n_Dy-1)/2;
+				int idx_ik_iDpY = ik * n_Dy + iDy;
 				complex<double> zcomp
-					= sFn[idx_ik_iDpY0] * sFn[idx_ik_iDpY];*/
+					= sFn[idx_ik_iDpY0] * sFn[idx_ik_iDpY];
 
-				cout << "sFn: " << Delta_y << "   " << k << "   "
-						<< z.real() << "   " << z.imag() /*<< "   "
-						<< sFn.real() << "   " << sFn.imag() */<< endl;
+				cout << "sFn: "
+						<< Delta_y << "   " << k << "   "
+						<< z.real() << "   " << z.imag() << "   "
+						<< zcomp.real() << "   " << zcomp.imag() << endl;
 			}
 		}
 	}

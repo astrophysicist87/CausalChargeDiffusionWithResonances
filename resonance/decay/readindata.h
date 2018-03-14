@@ -16,6 +16,7 @@
 #include "parameters.h"
 
 using namespace std;
+using namespace parameters;
 
 namespace readindata
 {

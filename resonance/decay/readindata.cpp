@@ -12,6 +12,13 @@
 #include "readindata.h"
 
 using namespace std;
+using namespace parameters;
+
+//extern int n_resonances;
+extern int n_pY_pts;
+extern int n_k_pts;
+extern double Del_pY_min;
+extern double Del_pY_max;
 
 extern vector<double> pT_pts, pT_wts;
 extern vector<double> pphi_pts, pphi_wts;

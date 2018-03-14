@@ -3,14 +3,26 @@ SHELL=/bin/sh
 SRCS= \
 CausalChargeDiffusion.cpp \
 gauss/gauss_quadrature.cpp \
-lib.cpp
+lib.cpp \
+resonance/lib.cpp \
+resonance/decay/readindata.cpp \
+resonance/decay/decay.cpp \
+resonance/sfn.cpp
 
 HDRS= \
 gauss/gauss_quadrature.h \
+CCDparams.h \
 defs.h \
 lib.h \
-resonance/sfn.h \
-asymptotics.h
+asymptotics.h \
+resonance/lib.h \
+resonance/indexers.h \
+resonance/decay/decay.h \
+resonance/decay/readindata.h \
+resonance/decay/parameters.h \
+resonance/thermal.h \
+resonance/chebyshev.h \
+resonance/sfn.h
 
 MAKEFILE=makefile
 
@@ -30,8 +42,11 @@ LIBS= -L/sw/lib -I/sw/include
 $(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
 	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(LIBS)
 
-CausalChargeDiffusion.o : CausalChargeDiffusion.cpp defs.h
+CausalChargeDiffusion.o : CausalChargeDiffusion.cpp defs.h resonance/sfn.h CCDparams.h
 	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c CausalChargeDiffusion.cpp -o CausalChargeDiffusion.o
+
+resonance/sfn.o : resonance/sfn.cpp resonance/sfn.h resonance/decay/parameters.h
+	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c resonance/sfn.cpp -o resonance/sfn.o
 
 clean:
 	rm -f $(OBJS)

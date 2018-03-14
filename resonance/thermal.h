@@ -15,13 +15,14 @@ using namespace std;
 #include "decay/parameters.h"
 #include "decay/readindata.h"
 
+using namespace parameters;
+
 extern vector<double> pT_pts, pT_wts;
 extern vector<double> pphi_pts, pphi_wts;
 extern vector<double> Del_pY_pts, Del_pY_wts;
-extern double * x_pts, * x_wts;
+vector<double> x_pts, x_wts;
 
-extern const int n_r_pts;
-extern const double TFO;
+const int n_r_pts = 51;
 
 //define some parameters for the exact emission function
 const double Rad = 5.0, Del_tau = 1.0, tau0 = 5.0, etaf = 0.6;
@@ -47,13 +48,17 @@ inline double eta_t(double r)
 
 double Cal_dN_dypTdpTdphi_toy_func(
 		int local_pid, vector<readindata::particle_info> * all_particles,
-		double pT_loc, double pphi_loc, double pY_loc )
+		double pT_loc, double pphi_loc, double pY_loc, double TFO )
 {
 	const double hbarC = 0.197327053;
 
 	// set particle information
 	double degen = (*all_particles)[local_pid].gspin;
 	double localmass = (*all_particles)[local_pid].mass;
+
+	x_pts = vector<double>(n_r_pts);
+	x_wts = vector<double>(n_r_pts);
+	gauss_quadrature(n_r_pts, 1, 0.0, 0.0, -1.0, 1.0, x_pts, x_wts);
 
 	// set some freeze-out surface information that's constant the whole time
 	double prefactor = degen/sqrt(8.0*M_PI*M_PI*M_PI)/M_PI/hbarC;
