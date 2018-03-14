@@ -2,13 +2,14 @@ SHELL=/bin/sh
 
 SRCS= \
 CausalChargeDiffusion.cpp \
-gauss_quadrature.cpp \
+gauss/gauss_quadrature.cpp \
 lib.cpp
 
 HDRS= \
-gauss_quadrature.h \
+gauss/gauss_quadrature.h \
 defs.h \
 lib.h \
+resonance/sfn.h \
 asymptotics.h
 
 MAKEFILE=makefile

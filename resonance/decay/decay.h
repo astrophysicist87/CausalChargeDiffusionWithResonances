@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#include "../gauss/gauss_quadrature.h"
+#include "../../gauss/gauss_quadrature.h"
 #include "parameters.h"
 #include "readindata.h"
 

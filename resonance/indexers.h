@@ -13,9 +13,8 @@
 using namespace std;
 
 #include "decay/parameters.h"
-#include "gauss/gauss_quadrature.h"
+#include "../gauss/gauss_quadrature.h"
 #include "lib.h"
-#include "asymptotics.h"
 
 /*USAGE:
 debugger(__LINE__, __FILE__);

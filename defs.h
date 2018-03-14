@@ -178,7 +178,7 @@ inline double Fn(double x, void * p)
 	struct chosen_particle * params = (struct chosen_particle *)p;
 	double cx = cosh(x);
 	
-	double c2 = chi_tilde_T_T;
+	double c2 = chi_tilde_T_T;	//==1/chiQ, in this case
 
 	double mByT = (params->mass) / Tf;
 

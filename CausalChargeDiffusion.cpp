@@ -11,6 +11,7 @@
 using namespace std;
 
 #include "defs.h"
+#include "resonance/sfn.h"
 
 //const int particle_to_study
 	// 1 - pion
@@ -26,7 +27,7 @@ bool white_Green = true;
 
 const double hbarC = 197.33;
 const double xi_infinity = 5.0;
-const double k_infinity = 500.0;
+const double k_infinity = 5.0;
 
 const int n_Dy = 5001;
 const double Delta_y_max = 5.0;
@@ -243,6 +244,9 @@ int main(int argc, char *argv[])
 	//get the ensemble averaged spectra
 	double norm = integrate_1D(norm_int, xi_pts_minf_inf, xi_wts_minf_inf, n_xi_pts, &particle1);	//by definition of charge balance function (CBF)
 
+//cout << "norm = " << norm << endl;
+//if (1) exit (8);
+
 	//vectorize calculations to make them run a little faster
 	vector<complex<double> > Ftn_particle1_vec, Ftn_particle2_vec;
 	vector<complex<double> > Ctnn_vec, Ctnn_no_SC_vec, SC_vec;
@@ -338,6 +342,41 @@ int main(int argc, char *argv[])
 				<< result.real() << "   " << result.imag() << "   "
 				<< result_no_SC.real() << "   " << result_no_SC.imag() << endl;
 	}
+
+	//one last check...
+	bool run_final_check = true;
+	if (run_final_check)
+	{
+		//vector<complex<double> > sFn = operation_mode_1(false);
+		for (int iDy = 0; iDy < n_Dy; iDy++)
+		{
+			double Delta_y = (double)iDy * Delta_y_step;
+			double Delta_xi = Delta_y;
+			for (int ik = 0; ik < n_k_pts; ++ik)
+			{
+//		if (iDy > 0)
+//			continue;
+//		if (ik > 0)
+//			continue;
+				double k = k_pts[ik];
+
+				complex<double> Ftn1 = Ftn_particle1_vec[ik];
+				complex<double> Ftn2 = Ftn_particle2_vec[ik];
+
+				complex<double> z = exp(i * k * Delta_y) * Ftn1 * conj(Ftn2);
+
+				/*int idx_ik_iDpY0 = ik * n_pY_pts + (n_pY_pts-1)/2;
+				int idx_ik_iDpY = ik * n_pY_pts + ipY;
+				complex<double> zcomp
+					= sFn[idx_ik_iDpY0] * sFn[idx_ik_iDpY];*/
+
+				cout << "sFn: " << Delta_y << "   " << k << "   "
+						<< z.real() << "   " << z.imag() /*<< "   "
+						<< sFn.real() << "   " << sFn.imag() */<< endl;
+			}
+		}
+	}
+
 
 	if (print_dndn_k)
 		output_dndn_k.close();

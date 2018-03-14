@@ -259,7 +259,10 @@ namespace readindata
 			double pm = -all_particles[j].sign;
 			fugacity = exp(one_by_Tconv * all_particles[j].mu);
 			for (int k = 1; k <= 10; k++)
-				yield += double(pow(pm, k+1))*pow(fugacity, (double)k)*gsl_sf_bessel_Kn(2, double(k)*mj*one_by_Tconv)/double(k);
+				yield += double(pow(pm, k+1))
+							* pow(fugacity, (double)k)
+							* gsl_sf_bessel_Kn(2, double(k)*mj*one_by_Tconv)
+							/ double(k);
 			all_particles[j].thermal_yield = yield*gj*mj*mj/(2.*M_PI*M_PI);
 		}
 		//**********************************************************************

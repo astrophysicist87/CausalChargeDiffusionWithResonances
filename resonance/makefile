@@ -2,22 +2,22 @@ SHELL=/bin/sh
 
 SRCS= \
 main.cpp \
-gauss/gauss_quadrature.cpp \
+../gauss/gauss_quadrature.cpp \
 lib.cpp \
 decay/readindata.cpp \
-decay/decay.cpp
+decay/decay.cpp \
+sfn.cpp
 
 HDRS= \
-gauss/gauss_quadrature.h \
+../gauss/gauss_quadrature.h \
 lib.h \
 indexers.h \
 decay/decay.h \
 decay/readindata.h \
 decay/parameters.h \
-asymptotics.h \
 thermal.h \
 chebyshev.h \
-main.h
+sfn.h
 
 MAKEFILE=makefile
 

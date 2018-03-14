@@ -2,11 +2,11 @@ SHELL=/bin/sh
 
 SRCS= \
 plot_SC.cpp \
-gauss_quadrature.cpp \
+gauss/gauss_quadrature.cpp \
 lib.cpp
 
 HDRS= \
-gauss_quadrature.h \
+gauss/gauss_quadrature.h \
 defs.h \
 lib.h \
 asymptotics.h

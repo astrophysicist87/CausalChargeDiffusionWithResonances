@@ -1,27 +1,14 @@
-#include <omp.h>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <iomanip>
 #include <cmath>
 #include <vector>
 #include <cstdlib>
 #include <complex>
 
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_sf_bessel.h>
-
 using namespace std;
 
-#include "decay/parameters.h"
-#include "lib.h"
-#include "decay/readindata.h"
-#include "gauss/gauss_quadrature.h"
-#include "decay/decay.h"
-#include "defs.h"
-#include "thermal.h"
-#include "chebyshev.h"
-#include "main.h"
+#include "sfn.h"
 #include "Stopwatch.h"
 
 const int operation_mode = 1;
@@ -33,6 +20,8 @@ int main(int argc, char *argv[])
 {
 	Stopwatch sw;
 	
+	vector<complex<double> > results;
+
 	sw.Start();
 	switch (operation_mode)
 	{
@@ -40,7 +29,7 @@ int main(int argc, char *argv[])
 			operation_mode_0(false);
 			break;
 		case 1:
-			operation_mode_1(false);
+			results = operation_mode_1(false);
 			break;
 		default:
 			cout << "Option not supported!" << endl;
